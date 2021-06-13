@@ -1,20 +1,96 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { axiosWithAuth } from "../helpers/axiosWithAuth";
+import { useHistory } from "react-router-dom";
 
-const Login = () => {
-  // make a post request to retrieve a token from the api
-  // when you have handled the token, navigate to the BubblePage route
+const Login = (props) => {
+  // :+1: make a post request to retrieve a token from the api
+  // 👍 when you have handled the token, navigate to the BubblePage route
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
 
-  const error = "";
-  //replace with error state
+  console.log("credentials", credentials);
+
+  const { push } = useHistory();
+
+  const [error, setError] = useState("");
+
+  const handleChanges = (e) => {
+    setCredentials({
+      ...credentials,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const submitLogin = (e) => {
+    e.preventDefault();
+    axiosWithAuth()
+      .post("/login", credentials)
+      .then((response) => {
+        console.log("submitLogin response success", response);
+        localStorage.setItem("token", response.data.payload);
+        push("/protected");
+      })
+      .catch((error) => {
+        console.log("submitLogin response error", error);
+        setError("Username or Password not valid.");
+      });
+  };
+
+  useEffect(() => {
+    axiosWithAuth()
+      .delete(`http://localhost:5000/api/colors/1`, {
+        headers: {
+          authorization:
+            "ahuBHejkJJiMDhmODZhZi0zaeLTQ4ZfeaseOGZgesai1jZWYgrTA07i73Gebhu98",
+        },
+      })
+      .then((res) => {
+        axiosWithAuth()
+          .get(`http://localhost:5000/api/colors`, {
+            headers: {
+              authorization: "",
+            },
+          })
+          .then((res) => {
+            console.log(res);
+          });
+        console.log(res);
+      });
+  });
 
   return (
     <div>
-      <h1>Welcome to the Bubble App!</h1>
-      <div data-testid="loginForm" className="login-form">
-        <h2>Build login form here</h2>
-      </div>
+      <form onSubmit={submitLogin}>
+        <label htmlFor="username">
+          username:{""}
+          <input
+            type="text"
+            name="username"
+            id="username"
+            placeholder="username"
+            value={credentials.username}
+            onChange={handleChanges}
+          />
+        </label>
 
-      <p data-testid="errorMessage" className="error">{error}</p>
+        <label htmlFor="password">
+          password:{""}
+          <input
+            type="password"
+            name="password"
+            id="password"
+            placeholder="password"
+            value={credentials.password}
+            onChange={handleChanges}
+          />
+        </label>
+        <br></br>
+        <button type="submit">Login</button>
+      </form>
+
+      {error ? <div style={{ color: "red" }}>{error}</div> : ""}
     </div>
   );
 };
